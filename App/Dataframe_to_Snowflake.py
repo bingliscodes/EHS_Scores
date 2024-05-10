@@ -1,72 +1,58 @@
-import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
-from sqlalchemy import create_engine
-from snowflake.sqlalchemy import URL
+from Spreadsheet_params import respfit_neshap_columns, hazcom_ppe_columns
+from Data_Operations import get_data_from_spreadsheet
+from Connection_paramaters import connection
 import pandas as pd
 from dotenv import load_dotenv
-import os
-from datetime import datetime, date
+from datetime import date
 
 # Load environment variables
 load_dotenv()
 
-# Get the absolute path to the directory where the script is running
-columns = {
-    "ADP_number": str,
-    "Workday_number": str,
-    "Status": str,
-    "Region": str,
-    "Zone": str,
-    "Last_name": str,
-    "First_name": str,
-    "FitTest_Compliant": str,
-    "NESHAP_Compliant": str,
-    "Account_period": datetime
-}
-script_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.dirname(script_dir)
-data_dir = os.path.join(parent_dir, 'Data')
-march_hazcom_ppe = os.path.join(data_dir, 'March_24_RespFit_NESHAP.xlsx')
-raw_file_path = os.path.join(script_dir, 'test_table.csv')
-# Replace backslashes with forward slashes
-file_path = march_hazcom_ppe.replace('\\', '/')
+respfit_neshap_table_name = "RESPFIT_NESHAP"
+hazcom_ppe_table_name = "HAZCOM_PPE"
 
-#read in the data
-df = pd.read_excel(file_path,sheet_name='FT.6H 4-01-24') 
-
+respfit_neshap_df = get_data_from_spreadsheet('March_24_RespFit_NESHAP.xlsx', 'FT.6H 4-01-24')
+hazcom_ppe_df = get_data_from_spreadsheet('March_24_HazCom_PPE.xlsx', 'HC.PPE 4-01-24')
 #Select desired columns
-df = df[['ADP #', 'Worday #', 'Status', 'Region', 'Zone', 'Last Name', 'First Name', 'Fit Test Compliant ?', 'NESHAP Compliant?']] 
-#add account period column (placeholder today)
-df['Account_period'] = date.today()
+respfit_neshap_df = respfit_neshap_df[['ADP #', 'Workday #', 'Status', 'Region', 'Zone', 'Last Name', 'First Name', 'Fit Test Compliant ?', 'NESHAP Compliant?']] 
+hazcom_ppe_df = hazcom_ppe_df[['ADP #', 'Workday #', 'Status', 'Region', 'Zone', 'Last Name', 'First Name', 'HazCom Compliant', 'PPE Compliant']]
 
-#rename columns to match snowflake table
-df.columns = columns
-df.columns = df.columns.str.upper()  # Ensure column names are uppercase                              
+#Add account period column (placeholder today)
+respfit_neshap_df['Account_period'] = date.today()
+hazcom_ppe_df['Account_period'] = date.today()
 
-table_name = "respfit_neshap"
+#Rename columns to match snowflake table
+respfit_neshap_df.columns = respfit_neshap_columns
+hazcom_ppe_df.columns = hazcom_ppe_columns                        
 
+#Remove all rows that are not "Active"
+respfit_neshap_filtered = respfit_neshap_df.loc[respfit_neshap_df['STATUS'] == 'Active']
+hazcom_ppe_filtered = hazcom_ppe_df.loc[hazcom_ppe_df['STATUS'] == 'Active']
 
-#Connection parameters from environment variables
-connection_params = {
-    'user': os.getenv('SNOWFLAKE_USER'),
-    'password': os.getenv('DW_PASSWORD'),
-    'account': os.getenv('DW_ACCOUNT'),
-    'warehouse': os.getenv('SNOWFLAKE_WAREHOUSE'),
-    'database': os.getenv('SNOWFLAKE_DATABASE'),
-    'schema': os.getenv('SNOWFLAKE_SCHEMA')
+#Replace Compliant and NonCompliant with 1 and 0 respectively, and replace region names to match department tables in Snowflake
+replace_dict = {
+    'Compliant': 1,
+    'NonCompliant': 0,
+    'SE': 'Southeast',
+    'NE': 'Northeast',
+    'MDW': 'MidWest',
+    'COR/FOP': 'Corporate'
 }
+respfit_neshap_filtered.replace(replace_dict, inplace=True)
+hazcom_ppe_filtered.replace(replace_dict, inplace=True)
 
-#Create a connection
-connection = snowflake.connector.connect(
-    user=connection_params['user'],
-    password=connection_params['password'],
-    account=connection_params['account'],
-    warehouse=connection_params['warehouse'],
-    database='DEPT_FINANCE',
-    schema='PUBLIC',
-    authenticator='snowflake',
-)
+#Merge the two data frames
+consolidated_df = pd.merge(respfit_neshap_filtered, hazcom_ppe_filtered, 
+                           on=['ADP_NUMBER', 'WORKDAY_NUMBER', 'REGION', 'ZONE', 'LAST_NAME', 'FIRST_NAME'],
+                           how='outer',
+                           suffixes=('_respfit_neshap', '_hazcom_ppe')
+                    )
+print(consolidated_df)
+#TODO: Is there a way to get the data all in one data frame for ease of use?
 
-success, nchunks, nrows, _ = write_pandas(connection, df, "RESPFIT_NESHAP")
+#Write rows to appropriate tables
+#success, nchunks, nrows, _ = write_pandas(connection, respfit_neshap_df, respfit_neshap_table_name)
+#success, nchunks, nrows, _ = write_pandas(connection, hazcom_ppe_df, hazcom_ppe_table_name)
                     
 

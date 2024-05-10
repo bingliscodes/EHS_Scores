@@ -5,8 +5,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 raw_file_path = os.path.join(script_dir, 'test_table.csv')
 # Replace backslashes with forward slashes
 file_path = raw_file_path.replace('\\', '/')
-# Replace spaces with '%20' for URL encoding
-file_path = file_path.replace(' ', '%20')
 
 # Now the file_path can be safely included in an f-string without syntax issues
 
