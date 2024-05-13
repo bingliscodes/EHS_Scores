@@ -10,7 +10,7 @@ respfit_neshap_columns = {
     "FIRST_NAME": str,
     "FITTEST_COMPLIANT": str,
     "NESHAP_COMPLIANT": str,
-    "ACCOUNT_PERIOD": datetime
+    #"ACCOUNT_PERIOD": datetime
 }
 
 hazcom_ppe_columns = {
@@ -23,5 +23,5 @@ hazcom_ppe_columns = {
     "FIRST_NAME": str,
     "HAZCOM_COMPLIANT": str,
     "PPE_COMPLIANT": str,
-    "ACCOUNT_PERIOD": datetime
+    #"ACCOUNT_PERIOD": datetime
 }

@@ -49,8 +49,6 @@ connection = snowflake.connector.connect(
 )
 
 
-
-
 #Close connection
 connection.close()
 
