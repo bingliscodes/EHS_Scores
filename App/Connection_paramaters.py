@@ -1,6 +1,7 @@
 import snowflake.connector
 from dotenv import load_dotenv
 import os
+import pandas as pd
 from session_commands import *
 
 # Load environment variables
@@ -36,6 +37,17 @@ def execute_session_command(connection, command):
         print("Session command executed successfully.")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+# For data retrieval operations
+def execute_query_and_load_data(connection, query):
+    try:
+        cur = connection.cursor()
+        cur.execute(query)
+        global_df = cur.fetch_pandas_all()
+        return global_df
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return pd.DataFrame()  # Return an empty DataFrame in case of an error
 
 #Create a connection
 connection = snowflake.connector.connect(

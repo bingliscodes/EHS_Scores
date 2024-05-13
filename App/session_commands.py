@@ -31,6 +31,10 @@ copy_into_table_command = f"""
     FILE_FORMAT = (FORMAT_NAME = 'my_csv_format');
 """
 
+get_EHS_data = """
+    SELECT * FROM DEPT_FINANCE.PUBLIC.ALL_EHS_SCORES_WITH_DISTRICT
+"""
+
 
 
 

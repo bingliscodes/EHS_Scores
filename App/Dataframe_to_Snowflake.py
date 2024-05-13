@@ -68,10 +68,13 @@ def EHS_spreadsheets_to_snowflake(RF_NESHAP_file_name, RF_NESHAP_sheet_name, HCP
 
     return (success, nchunks, nrows)
 
-#March Data
-#EHS_spreadsheets_to_snowflake('March_24_RespFit_NESHAP.xlsx', 'FT.6H 4-01-24', 'March_24_HazCom_PPE.xlsx', 'HC.PPE 4-01-24', date(2024, 3, 1))
+if __name__ == "__main__":
 
-#April Data
-EHS_spreadsheets_to_snowflake('April_24_RespFit_NESHAP.xlsx', 'FT.6H 5-01-24', 'April_24_HazCom_PPE.xlsx', 'HC.PPE 5-01-24', acc_date=date(2024, 4, 1))
+    #March Data
+    print("Executing Dataframe_toSnowflake.py")
+    #EHS_spreadsheets_to_snowflake('March_24_RespFit_NESHAP.xlsx', 'FT.6H 4-01-24', 'March_24_HazCom_PPE.xlsx', 'HC.PPE 4-01-24', date(2024, 3, 1))
 
-#May Data
+    #April Data
+    #EHS_spreadsheets_to_snowflake('April_24_RespFit_NESHAP.xlsx', 'FT.6H 5-01-24', 'April_24_HazCom_PPE.xlsx', 'HC.PPE 5-01-24', date(2024, 4, 1))
+
+    #May Data
